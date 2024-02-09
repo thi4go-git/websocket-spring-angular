@@ -12,6 +12,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -33,7 +34,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
                     MensagemDTO msgDto = MensagemDTO.builder()
                             .idSession(session.getId())
-                            .msg("Você está conectado: " + LocalDate.now().toString())
+                            .msg("Você está conectado: " + LocalDateTime.now().toString())
                             .build();
 
                     ObjectMapper objectMapper = new ObjectMapper();
@@ -57,6 +58,19 @@ public class WebSocketHandler extends TextWebSocketHandler {
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         //Ao receber a mensagem
         LOG.info("[handleTextMessage] (Mensagem Recebida:) Message id: " + message.getPayload());
+
+        // Envie a mensagem para todos como um objeto JSON
+        MensagemDTO msgDto = MensagemDTO.builder()
+                .idSession(session.getId())
+                .msg("[handleTextMessage]:  " + message.getPayload())
+                .build();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        // Converta o objeto MensagemDTO em uma string JSON
+        String mensagemJson = objectMapper.writeValueAsString(msgDto);
+
+        // Envie a mensagem como um objeto JSON
+        session.sendMessage(new TextMessage(mensagemJson));
     }
 
     @Override

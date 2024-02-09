@@ -41,6 +41,7 @@ export class AppComponent implements OnInit {
       this.socket.onmessage = (event) => {
         const data = event.data;
         if (event.type === 'message') {
+          this.mensagensLista = [];
           this.mensagensLista.push(`${data}`);
           const mensagemDTO: MensagemDTO = JSON.parse(event.data);
           console.log(mensagemDTO);
