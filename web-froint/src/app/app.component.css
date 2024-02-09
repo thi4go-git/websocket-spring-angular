@@ -1,0 +1,18 @@
+.corpo {
+    margin: 5px;
+}
+
+.header {
+    background-color: black;
+    text-align: center;
+    height: 40px;
+}
+
+.texto-header {
+    color: antiquewhite;
+    padding-top: 10px;
+}
+
+.corpo {
+    background-color: beige;
+}

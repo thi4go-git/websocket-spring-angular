@@ -1,0 +1,21 @@
+<div class="corpo">
+  <div class="header">
+    <span class="texto-header">
+      <h1>Exemplo Web Socket</h1>
+    </span>
+  </div>
+  <div class="corpo">
+
+    <div>
+      <button id="btn-enviar" (click)="sendMessage()">Enviar</button>
+    </div>
+
+    <br>
+    <h3>Status Conexão:</h3>
+    <div role="alert" *ngFor="let msg of mensagensLista">
+      {{ msg }}
+    </div>
+
+
+  </div>
+</div>
