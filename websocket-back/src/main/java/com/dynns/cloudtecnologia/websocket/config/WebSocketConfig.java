@@ -20,7 +20,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
      */
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        // URL/EndPoint WebSocket:  ws://localhost:8080/chat
+        // URL RAIZ do websocket:  ws://localhost:8080/chat
         registry.addHandler(webSocketHandler, "/chat").setAllowedOrigins("*");
     }
 }

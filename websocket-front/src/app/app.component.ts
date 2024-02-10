@@ -15,6 +15,7 @@ export class AppComponent implements OnInit {
   title = 'websocket-front';
   socket: WebSocket | undefined;
   mensagensLista: string[] = [];
+  private permiteConexaoWebSocket: boolean = false;
 
   ngOnInit(): void {
     this.conectarWebSocket();
@@ -22,9 +23,9 @@ export class AppComponent implements OnInit {
   }
 
   private conectarWebSocket() {
-    this.socket = new WebSocket(`ws://localhost:8080/chat`);
+    this.socket = new WebSocket(`ws://localhost:8080/chat?permissao=` + this.permiteConexaoWebSocket);
     this.socket.onopen = () => {
-      alert("Conectado com Sucesso!");
+      //alert("Conectado com Sucesso!");
     };
   }
 
@@ -32,7 +33,6 @@ export class AppComponent implements OnInit {
     const message = 'Mensagem do Front';
     if (this.socket != undefined) {
       this.socket.send(message);
-      alert("Mensagem enviada  com Sucesso!");
     }
   }
 
@@ -41,7 +41,6 @@ export class AppComponent implements OnInit {
       this.socket.onmessage = (event) => {
         const data = event.data;
         if (event.type === 'message') {
-          this.mensagensLista = [];
           this.mensagensLista.push(`${data}`);
           const mensagemDTO: MensagemDTO = JSON.parse(event.data);
           console.log(mensagemDTO);
