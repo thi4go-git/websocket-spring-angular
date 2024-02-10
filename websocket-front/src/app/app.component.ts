@@ -15,7 +15,7 @@ export class AppComponent implements OnInit {
   title = 'websocket-front';
   socket: WebSocket | undefined;
   mensagensLista: string[] = [];
-  private permiteConexaoWebSocket: boolean = false;
+  private permiteConexaoWebSocket: boolean = true;
 
   ngOnInit(): void {
     this.conectarWebSocket();
