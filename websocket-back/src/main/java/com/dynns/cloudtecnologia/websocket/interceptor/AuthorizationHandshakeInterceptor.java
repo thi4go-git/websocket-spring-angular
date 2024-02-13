@@ -10,13 +10,10 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
 
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.logging.Logger;
 
 import static java.util.Objects.requireNonNull;
 
 public class AuthorizationHandshakeInterceptor implements HandshakeInterceptor {
-
-    private static final Logger LOG = Logger.getLogger(AuthorizationHandshakeInterceptor.class.getName());
 
     @Override
     public boolean beforeHandshake(
@@ -32,10 +29,6 @@ public class AuthorizationHandshakeInterceptor implements HandshakeInterceptor {
                 .stream()
                 .findFirst()
                 .orElseThrow(() -> new NoSuchElementException("Nenhum token jwt Bearer encontrado no " + HttpHeaders.AUTHORIZATION));
-
-        token = token.replace("Bearer ", "");
-        LOG.info("****** TOKEN JWT ******");
-        LOG.info(token);
 
         return JwtUtil.tokenJwtIsValid(token);
     }

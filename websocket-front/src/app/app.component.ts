@@ -23,9 +23,13 @@ export class AppComponent implements OnInit {
   }
 
   private conectarWebSocket() {
-    this.socket = new WebSocket(`ws://localhost:8080/chat?permissao=` + this.permiteConexaoWebSocket);
+    this.socket = new WebSocket(`ws://localhost:8080/chat?conecta=` + this.permiteConexaoWebSocket);
     this.socket.onopen = () => {
       //alert("Conectado com Sucesso!");
+    };
+
+    this.socket.onclose = () => {
+      alert("Conexão encerrada com Sucesso!");
     };
   }
 
