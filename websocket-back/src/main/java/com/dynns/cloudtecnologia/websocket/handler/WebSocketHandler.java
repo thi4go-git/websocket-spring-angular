@@ -40,7 +40,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
         }
 
         if (!permissaoOpt.get().equals("true")) {
-            LOG.warning("Conexão negada, (conecta deve ser true) parâmetro conecta: " + permissaoOpt.get());
+            LOG.warning("Conexão negada, (parâmetro conecta deve ser true) parâmetro conecta: " + permissaoOpt.get());
             encerrarConexaoWebSocket(session, CloseStatus.NOT_ACCEPTABLE);
             return;
         }
@@ -110,8 +110,11 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
         try {
             session.sendMessage(new TextMessage(mensagemJson));
+            LOG.info("::: MSG Enviada ::: ");
+            LOG.info(mensagemJson);
         } catch (IOException e) {
             throw new GeralException("Erro ao enviar MSG WebSocket!");
         }
+
     }
 }

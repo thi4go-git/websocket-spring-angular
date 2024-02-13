@@ -5,16 +5,16 @@ import com.dynns.cloudtecnologia.websocket.rest.dto.MensagemDTO;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
+
 import java.time.LocalDateTime;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
-import java.util.logging.Logger;
 
 @Service
 public class MsgAutomatica {
 
-    private static final Logger LOG = Logger.getLogger(MsgAutomatica.class.getName());
+    private static final Long DEZ_SEGUNDOS = 10000L;
 
     @Bean
     public CommandLineRunner executarAutomatico() {
@@ -30,9 +30,8 @@ public class MsgAutomatica {
                         .msg("Mensagem automática BACKEND: " + LocalDateTime.now())
                         .build();
                 WebSocketHandler.notifyAllClients(msgAuto);
-                LOG.info("::: MSG AUTOMATICA ENVIADA ! :::");
             }
-        }, 10000L, 10000L);
+        }, DEZ_SEGUNDOS, DEZ_SEGUNDOS);
     }
 
 }

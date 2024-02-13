@@ -4,13 +4,13 @@ import org.springframework.stereotype.Component;
 
 
 @Component
-public class JwtUtil {
+public abstract class JwtUtil {
 
     private JwtUtil() {
     }
 
 
-    public static boolean validarTokenJwt(String token) {
+    public static boolean tokenJwtIsValid(String token) {
         return true;
     }
 
