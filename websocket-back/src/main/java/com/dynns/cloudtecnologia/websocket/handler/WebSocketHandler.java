@@ -1,5 +1,6 @@
 package com.dynns.cloudtecnologia.websocket.handler;
 
+import com.dynns.cloudtecnologia.websocket.exception.GeralException;
 import com.dynns.cloudtecnologia.websocket.rest.dto.MensagemDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,96 +31,56 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
-        //Ao realizar conexão
-
         Optional<String> permissaoOpt = obterOptionalParametroPermissaoUrl(session);
 
         if (permissaoOpt.isEmpty() || permissaoOpt.get().isBlank()) {
-            LOG.warning("Conexão negada: Não contém o parâmetro 'permissao' na URL.");
+            LOG.warning("Conexão negada: Não contém o parâmetro 'conecta' na URL.");
             encerrarConexaoWebSocket(session, CloseStatus.POLICY_VIOLATION);
             return;
         }
 
-        String permissao = permissaoOpt.get();
-        if (!permissao.equals("true")) {
-            LOG.warning("Conexão negada, permissão URL: " + permissao);
-            encerrarConexaoWebSocket(session, CloseStatus.POLICY_VIOLATION);
+        if (!permissaoOpt.get().equals("true")) {
+            LOG.warning("Conexão negada, (conecta deve ser true) parâmetro conecta: " + permissaoOpt.get());
+            encerrarConexaoWebSocket(session, CloseStatus.NOT_ACCEPTABLE);
             return;
         }
+
+        sessionsStatic.add(session);
+        LOG.info("[afterConnectionEstablished] (Conexão estabelecida) Session id: " + session.getId());
 
         MensagemDTO msgDto = MensagemDTO.builder()
                 .idSession(session.getId())
                 .msg("Conexão estabelecida: " + session.getId() + " - " + LocalDateTime.now())
                 .build();
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        String mensagemJson;
-        try {
-            mensagemJson = objectMapper.writeValueAsString(msgDto);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-
-        try {
-            session.sendMessage(new TextMessage(mensagemJson));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        sessionsStatic.add(session);
-        LOG.info("[afterConnectionEstablished] (Conexão estabelecida) Session id: " + session.getId());
+        enviarMensagem(session, msgDto);
     }
 
     private Optional<String> obterOptionalParametroPermissaoUrl(WebSocketSession session) {
         // Esse método espera que seja passado um valor como parâmetro na URL:
-        //ws://localhost:8080/chat?permissao=true
+        //ws://localhost:8080/chat?conecta=true
         return Optional
                 .ofNullable(session.getUri())
                 .map(UriComponentsBuilder::fromUri)
                 .map(UriComponentsBuilder::build)
                 .map(UriComponents::getQueryParams)
-                .map(it -> it.get("permissao"))
+                .map(it -> it.get("conecta"))
                 .flatMap(it -> it.stream().findFirst())
                 .map(String::trim);
     }
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        //Ao receber a mensagem
         LOG.info("[handleTextMessage] (Mensagem Recebida:) Message id: " + message.getPayload());
-
         MensagemDTO msgDto = MensagemDTO.builder()
                 .idSession(session.getId())
-                .msg("[handleTextMessage]:  " + message.getPayload())
+                .msg("[handleTextMessage] (Mensagem Recebida):  " + message.getPayload())
                 .build();
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        String mensagemJson = objectMapper.writeValueAsString(msgDto);
-        session.sendMessage(new TextMessage(mensagemJson));
+        enviarMensagem(session, msgDto);
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-        // Ao encerrar a conexão
-        MensagemDTO msgDto = MensagemDTO.builder()
-                .idSession(session.getId())
-                .msg("Conexão ENCERRADA: " + session.getId() + " - " + LocalDateTime.now())
-                .build();
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        String mensagemJson;
-        try {
-            mensagemJson = objectMapper.writeValueAsString(msgDto);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-
-        try {
-            session.sendMessage(new TextMessage(mensagemJson));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
         sessionsStatic.remove(session);
         LOG.info("[afterConnectionClosed] (Conexão encerrada) Session id: " + session.getId());
     }
@@ -128,25 +89,29 @@ public class WebSocketHandler extends TextWebSocketHandler {
         try {
             session.close(status);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new GeralException("Erro ao encerrar conexão!");
         }
     }
 
     public static void notifyAllClients(MensagemDTO msgDto) {
         for (WebSocketSession session : sessionsStatic) {
-            ObjectMapper objectMapper = new ObjectMapper();
-            String mensagemJson;
-            try {
-                mensagemJson = objectMapper.writeValueAsString(msgDto);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
-            }
+            enviarMensagem(session, msgDto);
+        }
+    }
 
-            try {
-                session.sendMessage(new TextMessage(mensagemJson));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+    private static void enviarMensagem(WebSocketSession session, MensagemDTO msgDto) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        String mensagemJson;
+        try {
+            mensagemJson = objectMapper.writeValueAsString(msgDto);
+        } catch (JsonProcessingException e) {
+            throw new GeralException("Erro ao converter MensagemDTO para JSON!");
+        }
+
+        try {
+            session.sendMessage(new TextMessage(mensagemJson));
+        } catch (IOException e) {
+            throw new GeralException("Erro ao enviar MSG WebSocket!");
         }
     }
 }

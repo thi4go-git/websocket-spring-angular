@@ -1,5 +1,6 @@
 package com.dynns.cloudtecnologia.websocket.config;
 
+import com.dynns.cloudtecnologia.websocket.interceptor.AuthorizationHandshakeInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.WebSocketHandler;
@@ -13,7 +14,6 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     @Autowired
     private WebSocketHandler webSocketHandler;
-    //import org.springframework.web.socket.WebSocketHandler;
 
     /**
      * @param registry Configurando a URL de conexão com o WebSocket
@@ -21,6 +21,8 @@ public class WebSocketConfig implements WebSocketConfigurer {
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         // URL RAIZ do websocket:  ws://localhost:8080/chat
-        registry.addHandler(webSocketHandler, "/chat").setAllowedOrigins("*");
+        registry.addHandler(webSocketHandler, "/chat")
+                .addInterceptors(new AuthorizationHandshakeInterceptor())
+                .setAllowedOrigins("*");
     }
 }
