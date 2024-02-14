@@ -22,7 +22,8 @@ public class WebSocketConfig implements WebSocketConfigurer {
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         // URL RAIZ do websocket:  ws://localhost:8080/chat
         registry.addHandler(webSocketHandler, "/chat")
-                .addInterceptors(new AuthorizationHandshakeInterceptor())
+                //.addInterceptors(new AuthorizationHandshakeInterceptor())
                 .setAllowedOrigins("*");
+        //.addInterceptors usado para obter os header e verificar se existe um Authorization Bearer
     }
 }

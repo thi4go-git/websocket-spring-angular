@@ -2,6 +2,7 @@ package com.dynns.cloudtecnologia.websocket.handler;
 
 import com.dynns.cloudtecnologia.websocket.exception.GeralException;
 import com.dynns.cloudtecnologia.websocket.rest.dto.MensagemDTO;
+import com.dynns.cloudtecnologia.websocket.util.JwtUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
@@ -27,50 +28,46 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
     private static final Logger LOG = Logger.getLogger(WebSocketHandler.class.getName());
     private static final Set<WebSocketSession> sessionsStatic = new CopyOnWriteArraySet<>();
+    private static final String NOME_PARAMETRO_URL = "token";
 
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
-        Optional<String> permissaoOpt = obterOptionalParametroPermissaoUrl(session);
+        Optional<String> permissaoOpt = obterOptionalParametroUrl(session);
 
-        if (permissaoOpt.isEmpty() || permissaoOpt.get().isBlank()) {
-            LOG.warning("Conexão negada: Não contém o parâmetro 'conecta' na URL.");
+        if (permissaoOpt.isEmpty() || permissaoOpt.get().isBlank() || permissaoOpt.get().isEmpty()) {
+            LOG.warning("Conexão negada: Não contém o parâmetro '" + NOME_PARAMETRO_URL + "' na URL.");
             encerrarConexaoWebSocket(session, CloseStatus.POLICY_VIOLATION);
             return;
         }
 
-        if (!permissaoOpt.get().equals("true")) {
-            LOG.warning("Conexão negada, (parâmetro conecta deve ser true) parâmetro conecta: " + permissaoOpt.get());
-            encerrarConexaoWebSocket(session, CloseStatus.NOT_ACCEPTABLE);
-            return;
+        String token = permissaoOpt.get();
+        if (JwtUtil.tokenJwtIsValid(token)) {
+            sessionsStatic.add(session);
+            LOG.info("[afterConnectionEstablished] (Conexão estabelecida) Session id: " + session.getId());
+            MensagemDTO msgDto = MensagemDTO.builder()
+                    .idSession(session.getId())
+                    .msg("Conexão estabelecida: " + session.getId() + " - " + LocalDateTime.now())
+                    .build();
+            enviarMensagem(session, msgDto);
         }
-
-        sessionsStatic.add(session);
-        LOG.info("[afterConnectionEstablished] (Conexão estabelecida) Session id: " + session.getId());
-
-        MensagemDTO msgDto = MensagemDTO.builder()
-                .idSession(session.getId())
-                .msg("Conexão estabelecida: " + session.getId() + " - " + LocalDateTime.now())
-                .build();
-
-        enviarMensagem(session, msgDto);
     }
 
-    private Optional<String> obterOptionalParametroPermissaoUrl(WebSocketSession session) {
+    private Optional<String> obterOptionalParametroUrl(WebSocketSession session) {
         // Esse método espera que seja passado um valor como parâmetro na URL:
-        //ws://localhost:8080/chat?conecta=true
+        //ws://localhost:8080/chat?token=tasdasdadssddasd
         return Optional
                 .ofNullable(session.getUri())
                 .map(UriComponentsBuilder::fromUri)
                 .map(UriComponentsBuilder::build)
                 .map(UriComponents::getQueryParams)
-                .map(it -> it.get("conecta"))
+                .map(it -> it.get(NOME_PARAMETRO_URL))
                 .flatMap(it -> it.stream().findFirst())
                 .map(String::trim);
     }
 
     @Override
-    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+    protected void handleTextMessage(WebSocketSession session, TextMessage message) {
         LOG.info("[handleTextMessage] (Mensagem Recebida:) Message id: " + message.getPayload());
         MensagemDTO msgDto = MensagemDTO.builder()
                 .idSession(session.getId())
@@ -107,7 +104,6 @@ public class WebSocketHandler extends TextWebSocketHandler {
         } catch (JsonProcessingException e) {
             throw new GeralException("Erro ao converter MensagemDTO para JSON!");
         }
-
         try {
             session.sendMessage(new TextMessage(mensagemJson));
             LOG.info("::: MSG Enviada ::: ");
@@ -115,6 +111,5 @@ public class WebSocketHandler extends TextWebSocketHandler {
         } catch (IOException e) {
             throw new GeralException("Erro ao enviar MSG WebSocket!");
         }
-
     }
 }

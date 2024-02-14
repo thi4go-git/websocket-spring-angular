@@ -14,6 +14,11 @@ import java.util.NoSuchElementException;
 import static java.util.Objects.requireNonNull;
 
 public class AuthorizationHandshakeInterceptor implements HandshakeInterceptor {
+    /*
+    Classe usada para interceptar a requisição recebida e verificar se existe um
+    Header Euthorizxation que tenha um token.
+    Após obter o token, é feita uma validação dele.
+     */
 
     @Override
     public boolean beforeHandshake(
